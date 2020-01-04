@@ -27,16 +27,16 @@
                     <input v-model="employeeId" type="number" size="3" min="1" max="999" required>
                 </label>
 
-                <button v-on:click="addNewEmployeeId(employeeId)">Добавить</button>
+                <button @click="addNewEmployeeId(employeeId)">Добавить</button>
 
-                <div v-if="employeeSet.size != 0">
+                <div v-if="employeeSetSize != 0">
                     В совещании учавствуют {{ employeeSet.size }} сотрудник (ов):
 
                     <ul class="text-left">
                         <li style="list-style-type: none" v-for="(employee, index) in employeeSet">
                             <p>
                                 {{ index + 1 }}) Id - {{ employee.id }}
-                                <button @click="employeeSet.delete(employee)">Удалить</button>
+                                <button @click="deleteEmployee(employee)">Удалить</button>
                             </p>
                         </li>
                     </ul>
@@ -66,7 +66,7 @@
         data: {
             employeeId: 1,
             employeeSet: new Set(),
-            employeeList: [],
+            employeeSetSize: 0
         },
 
         methods: {
@@ -92,7 +92,12 @@
                     alert("Сотрудни с таким Id уже добавлен!");
                 } else {
                     this.employeeSet.add(new Employee(newId));
+                    this.employeeSetSize++;
                 }
+            },
+            deleteEmployee(employee) {
+                this.employeeSet.delete(employee);
+                this.employeeSetSize--;
             }
         },
 
