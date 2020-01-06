@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="./css/index.css">
+    <script src="./js/script.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <meta charset="UTF-8">
+    <title>MeetingCost</title>
+</head>
+
+<body>
+
+<div id="app">
+    <div class="container">
+        <div class="row">
+            <div id="header" class="col text-center">
+                <h1>История о потраченном времени!*</h1>
+            </div>
+        </div>
+
+        <div id="main" class="row" v-bind:style="{height:89+'vh'}">
+            <div class="col col-lg-4 col-md-6 text-left">
+                <h3>Участники совещания:</h3>
+
+                <div class="header-block">
+                    <label>Id сотрудника:
+                        <input v-model="employeeId" type="number" size="3" min="1" max="999" required>
+                    </label>
+
+                    <button @click="addNewEmployeeId(employeeId)">Добавить</button>
+                </div>
+
+
+                <div v-if="employeeSetSize != 0">
+
+                    <div class="border border-dark">
+                        В совещании учавствуют {{ employeeSet.size }} сотрудник(ов):
+
+                        <ul class="text-left">
+                            <li style="list-style-type: none" v-for="(employee, index) in employeeSet">
+                                <p>
+                                    {{ index + 1 }}) Id - {{ employee.id }}
+                                    <button @click="deleteEmployee(employee)">Удалить</button>
+                                </p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col col-lg-4 col-md-6">
+                <h3>Общая информация:</h3>
+
+                <div class="header-block"></div>
+
+                <div v-if="employeeSetSize != 0">
+
+                    <div class="border border-dark">
+                        Состав (по должностям):
+
+                        <ul class="text-left">
+                            <li style="list-style-type: none" v-for="positionInfo in positionsMap">
+                                <p>
+                                    {{ positionInfo[0] }} х {{ positionInfo[1] }} чел.
+                                </p>
+                            </li>
+                        </ul>
+
+                    </div>
+
+                </div>
+            </div>
+            <div class="col col-lg-4 col-md-12 text-center">
+                <h3>Затраченные средства:</h3>
+                <div class="col text-center">
+                    <button type="button"
+                            class="btn btn-default btn-block btn-lg p-0"
+                            @click="start()">
+                        <i id="b-play" class="fas fa-play"></i>
+                    </button>
+                </div>
+
+                <div class="header-block">
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div id="footer" class="col text-center">
+                <h3>*Бессмысленным и беспощадным совещаниям посвещается</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    new Vue({
+        el: "#app",
+        data: {
+            employeeId: 1,
+            employeeSet: new Set(),
+            employeeSetSize: 0,
+            positionsMap: new Map(),
+            isStart: false,
+        },
+
+        methods: {
+            start() {
+                if (this.employeeSetSize === 0) {
+                    alert("Пригласите сотрудников на совещание");
+                } else if (this.employeeSetSize === 1) {
+                    alert("На совещании д.б. минимум 2 человека");
+                } else {
+                    this.isStart = !this.isStart;
+                    if (this.isStart) {
+                        $('#b-play').removeClass("fa-play").addClass("fa-stop");
+                    } else {
+                        $('#b-play').removeClass("fa-stop").addClass("fa-play");
+                    }
+
+                }
+            },
+
+            isEmployeeSetContainsId(employeeSet, id) {
+                if (employeeSet.size === 0) {
+                    return false;
+                } else {
+                    for (let item of employeeSet.values()) {
+                        if (item.id === id) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            },
+
+            addEmployeeToPositionsMap(positionsMap, position) {
+                let isPositionContainsInMap = positionsMap.has(position);
+                if (isPositionContainsInMap) {
+                    positionsMap.set(position, (positionsMap.get(position)) + 1);
+                } else {
+                    positionsMap.set(position, 1);
+                }
+            },
+
+
+            addNewEmployeeId(newId) {
+
+                if (newId === '') {
+                    alert("Задайте id сотрудника");
+                } else if (newId > 600) {
+                    alert("В компании нет сотрудников с id больше 600!");
+                } else if (this.isEmployeeSetContainsId(this.employeeSet, newId)) {
+                    alert("Сотрудни с таким Id уже добавлен!");
+                } else {
+                    let employee = new Employee(newId);
+                    this.employeeSet.add(employee);
+                    this.employeeSetSize++;
+
+                    this.addEmployeeToPositionsMap(this.positionsMap, employee.position);
+                }
+            },
+            deleteEmployee(employee) {
+                let isObjectDeleted = this.employeeSet.delete(employee);
+                if (isObjectDeleted) {
+                    this.deleteEmployeeFromPositionsMap(this.positionsMap, employee.position);
+                    this.employeeSetSize--;
+                }
+            },
+            deleteEmployeeFromPositionsMap(positionsMap, position) {
+                let isPositionContainsInMap = positionsMap.has(position);
+                console.log(isPositionContainsInMap);
+                if (isPositionContainsInMap) {
+                    let count = positionsMap.get(position);
+                    positionsMap.delete(position);
+                    if (count !== 1) {
+                        positionsMap.set(position, count - 1);
+                    }
+                }
+            }
+        },
+
+        computed: {}
+    })
+</script>
+
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
