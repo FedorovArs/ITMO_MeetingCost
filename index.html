@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<html lang="en">
 <head>
     <link rel="stylesheet" href="./css/index.css">
     <script src="./js/script.js"></script>
@@ -18,12 +18,13 @@
         <div class="row">
             <div id="header" class="col text-center">
                 <h1>История о потраченном времени!*</h1>
+                <hr/>
             </div>
         </div>
 
-        <div id="main" class="row" v-bind:style="{height:89+'vh'}">
+        <div id="main" class="row">
             <div class="col col-lg-4 col-md-6 text-left">
-                <h3>Участники совещания:</h3>
+                <h3>Участники встречи:</h3>
 
                 <div class="header-block">
                     <label>Id сотрудника:
@@ -72,16 +73,35 @@
 
                     </div>
 
+                    <br>
+
+                    <div class="border border-dark" v-if="totalSum">
+                        Длительность:
+                        <ul class="text-left">
+                            <li style="list-style-type: none">
+                                <p>
+                                    {{ getMeetingTime() }}
+                                </p>
+                            </li>
+                        </ul>
+
+                    </div>
+
                 </div>
             </div>
             <div class="col col-lg-4 col-md-12 text-center">
                 <h3>Затраченные средства:</h3>
                 <div class="col text-center">
                     <button type="button"
-                            class="btn btn-default btn-block btn-lg p-0"
+                            class="btn btn-outline-success btn-lg btn-block"
                             @click="start()">
                         <i id="b-play" class="fas fa-play"></i>
                     </button>
+                </div>
+
+                <div class="row align-items-center result-div">
+                    <div class="col text-right d-inline result-sum "> {{ totalSum }}</div>
+                    <div class="col text-left d-inline">{{ totalSum != undefined ? '&#8381' : '' }}</div>
                 </div>
 
                 <div class="header-block">
@@ -91,7 +111,7 @@
 
         <div class="row">
             <div id="footer" class="col text-center">
-                <h3>*Бессмысленным и беспощадным совещаниям посвещается</h3>
+                <h3>*Бессмысленным и беспощадным совещаниям посвещается!</h3>
             </div>
         </div>
     </div>
@@ -107,9 +127,27 @@
             employeeSetSize: 0,
             positionsMap: new Map(),
             isStart: false,
+            totalSum: undefined,
+            timerId: 0,
+            meetingTime: 0,
+            meetingTimeTimerId: 0,
         },
 
         methods: {
+            getMeetingTime() {
+
+                let time = this.meetingTime / 1000;
+
+                let hours = Math.floor(time / 60 / 60);
+                let minutes = Math.floor(time / 60) - (hours * 60);
+                let seconds = time % 60;
+
+                return [
+                    hours.toString().padStart(2, '0'),
+                    minutes.toString().padStart(2, '0'),
+                    seconds.toString().padStart(2, '0')
+                ].join(':');
+            },
             start() {
                 if (this.employeeSetSize === 0) {
                     alert("Пригласите сотрудников на совещание");
@@ -119,10 +157,18 @@
                     this.isStart = !this.isStart;
                     if (this.isStart) {
                         $('#b-play').removeClass("fa-play").addClass("fa-stop");
+
+                        this.totalSum = undefined;
+                        this.meetingTime = 0;
+                        $('.result-sum').html("");
+                        this.timerId = setInterval(this.incrementTotalSum, 5000);
+                        this.meetingTimeTimerId = setInterval(this.incrementMeetingTime, 1000);
+
                     } else {
                         $('#b-play').removeClass("fa-stop").addClass("fa-play");
+                        clearInterval(this.timerId);
+                        clearInterval(this.meetingTimeTimerId);
                     }
-
                 }
             },
 
@@ -174,7 +220,6 @@
             },
             deleteEmployeeFromPositionsMap(positionsMap, position) {
                 let isPositionContainsInMap = positionsMap.has(position);
-                console.log(isPositionContainsInMap);
                 if (isPositionContainsInMap) {
                     let count = positionsMap.get(position);
                     positionsMap.delete(position);
@@ -182,6 +227,36 @@
                         positionsMap.set(position, count - 1);
                     }
                 }
+            },
+            incrementTotalSum() {
+                if (this.totalSum === undefined) {
+                    this.totalSum = 0;
+                }
+
+                let start = this.totalSum;
+
+                let sumToAdd = this.getSalaryBySeconds(5);
+                this.totalSum += sumToAdd;
+
+                $('.result-sum').spincrement({
+                    thousandSeparator: " ",
+                    from: start,
+                    to: this.totalSum,
+                    duration: 1000
+                });
+            },
+            getSalaryBySeconds(seconds) {
+                let sum = 0;
+                for (let item of this.employeeSet) {
+                    sum += item.salaryBySecond;
+                }
+
+                let result = Math.ceil(sum * seconds);
+                console.log(result);
+                return result;
+            },
+            incrementMeetingTime() {
+                this.meetingTime += 1000;
             }
         },
 
@@ -190,9 +265,9 @@
 </script>
 
 
-<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
-        crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+<script src="./js/jquery.spincrement.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
         integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
         crossorigin="anonymous"></script>
