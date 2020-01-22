@@ -2,7 +2,15 @@
     height: 55px;
 }
 
+#mainStatisticsHeader {
+    height: 55px;
+}
+
 #main {
+    min-height: calc(100vh - 130px);
+}
+
+#mainStatistics {
     min-height: calc(100vh - 130px);
 }
 
@@ -17,4 +25,12 @@
 #b-play {
     border: none;
     outline: none;
+}
+
+.canvas-chart {
+    width: 100%;
+}
+
+.charts {
+    min-height: calc(100vh - 180px);
 }
