@@ -8,6 +8,7 @@
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vuex"></script>
     <meta charset="UTF-8">
     <title>MeetingCost</title>
 </head>
@@ -40,7 +41,9 @@
                 <div class="col-lg-6 col-md-12 chart-col">
                     <canvas class="canvas-chart" id="barChart"></canvas>
                 </div>
-                <div class="col-lg-6 col-md-12 chart-col">График 2</div>
+                <div class="col-lg-6 col-md-12 chart-col">
+                    <canvas class="canvas-chart" id="pieChart"></canvas>
+                </div>
             </div>
         </div>
 
@@ -86,7 +89,7 @@
                         Состав (по должностям):
 
                         <ul class="text-left">
-                            <li style="list-style-type: none" v-for="positionInfo in positionsMap">
+                            <li style="list-style-type: none" v-for="positionInfo in changePositionMap">
                                 <p>
                                     {{ positionInfo[0] }} х {{ positionInfo[1] }} чел.
                                 </p>
@@ -149,14 +152,67 @@
 
 <script>
 
+    const storeVuex = new Vuex.Store({
+        state: {
+            positionsMap: new Map(),
+            salaryMap: new Map()
+        },
+        mutations: {
+            addPosition(state, position) {
+                let isPositionContainsInMap = state.positionsMap.has(position);
+                if (isPositionContainsInMap) {
+                    state.positionsMap.set(position, (state.positionsMap.get(position)) + 1);
+                } else {
+                    state.positionsMap.set(position, 1);
+                }
+            },
+            deletePosition(state, position) {
+                let isPositionContainsInMap = state.positionsMap.has(position);
+                if (isPositionContainsInMap) {
+                    let count = state.positionsMap.get(position);
+                    state.positionsMap.delete(position);
+                    if (count !== 1) {
+                        state.positionsMap.set(position, count - 1);
+                    }
+                }
+            },
+            addSalary(state, employee, seconds) {
+                let isPositionContainsInMap = state.salaryMap.has(employee.position);
+                if (isPositionContainsInMap) {
+                    state.salaryMap.set(employee.position, (state.salaryMap.get(employee.position)) +
+                        (employee.salaryBySecond * seconds));
+                } else {
+                    state.salaryMap.set(employee.position, employee.salaryBySecond * seconds);
+                }
+            },
+        },
+        getters: {
+            getPositionsMapKeys: state => () => {
+                return Array.from(state.positionsMap.keys());
+            },
+
+            getPositionsMapValue: state => () => {
+                return Array.from(state.positionsMap.values());
+            },
+            getSalaryMapKeys: state => () => {
+                return Array.from(state.salaryMap.keys());
+            },
+
+            getSalaryMapValue: state => () => {
+                return Array.from(state.salaryMap.values());
+            }
+        }
+    });
+
     new Vue({
         el: "#app",
+        store: storeVuex,
         data: {
             isMainShow: true,
             employeeId: 1,
             employeeSet: new Set(),
             employeeSetSize: 0,
-            positionsMap: new Map(),
+            ...Vuex.mapState(['positionsMap']),
             isStart: false,
             totalSum: undefined,
             timerId: 0,
@@ -165,22 +221,31 @@
         },
 
         methods: {
+            ...Vuex.mapMutations(['addPosition', 'deletePosition', 'addSalary']),
             showStatistics() {
                 this.isMainShow = !this.isMainShow;
-
                 let ctx = $('#barChart').get(0).getContext('2d');
                 new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: ["Russia", "United States", "China"],
+                        labels: this.$store.getters.getPositionsMapKeys(),
                         datasets: [{
-                            label: 'Population',
-                            data: [100, 200, 500],
+                            label: 'Состав по должностям',
+                            data: this.$store.getters.getPositionsMapValue(),
                             backgroundColor: [
                                 'rgba(255, 99, 132, 0.6)',
                                 'rgba(54, 162, 235, 0.6)',
                                 'rgba(255, 206, 86, 0.6)',
+                                'rgba(75, 192, 192, 0.6)',
+                                'rgba(153, 102, 255, 0.6)',
+                                'rgba(255, 159, 64, 0.6)',
+                                'rgba(255, 99, 132, 0.6)',
+                                'rgba(54, 162, 235, 0.6)',
+                                'rgba(255, 206, 86, 0.6)',
+                                'rgba(75, 192, 192, 0.6)',
+                                'rgba(153, 102, 255, 0.6)'
                             ]
+
                         }]
                     },
                     options: {
@@ -190,12 +255,15 @@
                             yAxes: [{
                                 ticks: {
                                     beginAtZero: true,
-                                    stepSize: 100
+                                    stepSize: 1
                                 }
                             }]
                         }
                     }
                 });
+
+                let pie = $('#pieChart').get(0).getContext('2d');
+                "!!!!!!"
 
             },
             getMeetingTime() {
@@ -249,13 +317,14 @@
                 }
             },
 
-            addEmployeeToPositionsMap(positionsMap, position) {
-                let isPositionContainsInMap = positionsMap.has(position);
-                if (isPositionContainsInMap) {
-                    positionsMap.set(position, (positionsMap.get(position)) + 1);
-                } else {
-                    positionsMap.set(position, 1);
-                }
+            addPositionV(position) {
+                this.$store.commit("addPosition", position);
+            },
+            deletePositionV(position) {
+                this.$store.commit("deletePosition", position);
+            },
+            addSalaryV(employee, seconds) {
+                this.$store.commit("addSalary", employee, seconds);
             },
 
 
@@ -272,24 +341,14 @@
                     this.employeeSet.add(employee);
                     this.employeeSetSize++;
 
-                    this.addEmployeeToPositionsMap(this.positionsMap, employee.position);
+                    this.addPositionV(employee.position);
                 }
             },
             deleteEmployee(employee) {
                 let isObjectDeleted = this.employeeSet.delete(employee);
                 if (isObjectDeleted) {
-                    this.deleteEmployeeFromPositionsMap(this.positionsMap, employee.position);
+                    this.deletePositionV(employee.position);
                     this.employeeSetSize--;
-                }
-            },
-            deleteEmployeeFromPositionsMap(positionsMap, position) {
-                let isPositionContainsInMap = positionsMap.has(position);
-                if (isPositionContainsInMap) {
-                    let count = positionsMap.get(position);
-                    positionsMap.delete(position);
-                    if (count !== 1) {
-                        positionsMap.set(position, count - 1);
-                    }
                 }
             },
             incrementTotalSum() {
@@ -313,6 +372,8 @@
                 let sum = 0;
                 for (let item of this.employeeSet) {
                     sum += item.salaryBySecond;
+
+                    this.addSalaryV(item, seconds);
                 }
 
                 let result = Math.ceil(sum * seconds);
@@ -324,7 +385,11 @@
             }
         },
 
-        computed: {}
+        computed: {
+            ...Vuex.mapState({
+                changePositionMap: state => state.positionsMap,
+            }),
+        }
     })
 </script>
 
