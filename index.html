@@ -144,7 +144,7 @@
 
         <div class="row">
             <div id="footer" class="col text-center">
-                <h3>*Бессмысленным и беспощадным совещаниям посвещается!</h3>
+                <h3>*Бессмысленным и беспощадным совещаниям посвящается!</h3>
             </div>
         </div>
     </div>
@@ -176,13 +176,12 @@
                     }
                 }
             },
-            addSalary(state, employee, seconds) {
-                let isPositionContainsInMap = state.salaryMap.has(employee.position);
+            addSalary(state, myObj) {
+                let isPositionContainsInMap = state.salaryMap.has(myObj.empl.position);
                 if (isPositionContainsInMap) {
-                    state.salaryMap.set(employee.position, (state.salaryMap.get(employee.position)) +
-                        (employee.salaryBySecond * seconds));
+                    state.salaryMap.set(myObj.empl.position, state.salaryMap.get(myObj.empl.position) + myObj.salaryBySecond);
                 } else {
-                    state.salaryMap.set(employee.position, employee.salaryBySecond * seconds);
+                    state.salaryMap.set(myObj.empl.position, myObj.salaryBySecond);
                 }
             },
         },
@@ -262,9 +261,34 @@
                     }
                 });
 
-                let pie = $('#pieChart').get(0).getContext('2d');
-                "!!!!!!"
+                let doughnut = $('#pieChart').get(0).getContext('2d');
+                var myDoughnutChart = new Chart(doughnut, {
+                        type: 'doughnut',
+                        data: {
+                            datasets: [{
+                                data: this.$store.getters.getSalaryMapValue(),
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.6)',
+                                    'rgba(54, 162, 235, 0.6)',
+                                    'rgba(255, 206, 86, 0.6)',
+                                    'rgba(75, 192, 192, 0.6)',
+                                    'rgba(153, 102, 255, 0.6)',
+                                    'rgba(255, 159, 64, 0.6)',
+                                    'rgba(255, 99, 132, 0.6)',
+                                    'rgba(54, 162, 235, 0.6)',
+                                    'rgba(255, 206, 86, 0.6)',
+                                    'rgba(75, 192, 192, 0.6)',
+                                    'rgba(153, 102, 255, 0.6)'
+                                ]
+                            }],
 
+                            // These labels appear in the legend and in the tooltips when hovering different arcs
+                            labels: this.$store.getters.getSalaryMapKeys()
+                        }
+                        ,
+                        options: {cutoutPercentage: 50}
+                    })
+                ;
             },
             getMeetingTime() {
 
@@ -324,7 +348,10 @@
                 this.$store.commit("deletePosition", position);
             },
             addSalaryV(employee, seconds) {
-                this.$store.commit("addSalary", employee, seconds);
+                this.$store.commit("addSalary", {
+                    empl: employee,
+                    salaryBySecond: employee.salaryBySecond * seconds
+                });
             },
 
 
@@ -365,18 +392,18 @@
                     thousandSeparator: " ",
                     from: start,
                     to: this.totalSum,
-                    duration: 1000
+                    duration: 1000,
+                    decimalPlaces: 1
                 });
             },
             getSalaryBySeconds(seconds) {
                 let sum = 0;
                 for (let item of this.employeeSet) {
                     sum += item.salaryBySecond;
-
                     this.addSalaryV(item, seconds);
                 }
 
-                let result = Math.ceil(sum * seconds);
+                let result = sum * seconds;
                 console.log(result);
                 return result;
             },
