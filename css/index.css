@@ -26,11 +26,3 @@
     border: none;
     outline: none;
 }
-
-.canvas-chart {
-    width: 100%;
-}
-
-.charts {
-    min-height: calc(100vh - 180px);
-}
