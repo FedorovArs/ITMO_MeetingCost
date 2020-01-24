@@ -38,12 +38,8 @@
             </div>
 
             <div class="row charts">
-                <div class="col-lg-6 col-md-12">
-                    <canvas class="canvas-chart" id="barChart" width="400" height="400"></canvas>
-                </div>
-                <div class="col-lg-6 col-md-12">
-                    <canvas class="canvas-chart" id="pieChart" width="400" height="400"></canvas>
-                </div>
+                <bar-chart></bar-chart>
+                <pie-chart></pie-chart>
             </div>
         </div>
 
@@ -204,6 +200,22 @@
                 return Array.from(state.salaryMap.values());
             }
         }
+    });
+
+    Vue.component('bar-chart', {
+        template: `
+            <div class="col-lg-6 col-md-12">
+                <canvas class="canvas-chart" id="barChart" width="400" height="400">
+                </canvas>
+            </div>`
+    });
+
+
+    Vue.component('pie-chart', {
+        template: `
+            <div class="col-lg-6 col-md-12">
+                <canvas class="canvas-chart" id="pieChart" width="400" height="400"></canvas>
+            </div>`
     });
 
     new Vue({
