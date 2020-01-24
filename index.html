@@ -204,7 +204,7 @@
 
     Vue.component('bar-chart', {
         template: `
-            <div class="col-lg-6 col-md-12">
+            <div class="col-lg-6 col-md-12 d-flex justify-content-center">
                 <canvas class="canvas-chart" id="barChart" width="400" height="400">
                 </canvas>
             </div>`
@@ -213,7 +213,7 @@
 
     Vue.component('pie-chart', {
         template: `
-            <div class="col-lg-6 col-md-12">
+            <div class="col-lg-6 col-md-12 d-flex justify-content-center">
                 <canvas class="canvas-chart" id="pieChart" width="400" height="400"></canvas>
             </div>`
     });
@@ -232,6 +232,9 @@
             timerId: 0,
             meetingTime: 0,
             meetingTimeTimerId: 0,
+            barChart: undefined,
+            pieChart: undefined,
+
         },
 
         methods: {
@@ -239,11 +242,15 @@
             showStatistics() {
                 this.isMainShow = !this.isMainShow;
                 let ctx = $('#barChart').get(0).getContext('2d');
-                new Chart(ctx, {
+
+                if (this.barChart) {
+                    this.barChart.destroy();
+                }
+
+                this.barChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: this.$store.getters.getPositionsMapKeys(),
-                        // labels: ['Сотрудник_1', 'Сотрудник_2', 'Сотрудник_3', 'Сотрудник_4'],
                         datasets: [{
                             label: 'Участники "по должностям"',
                             data: this.$store.getters.getPositionsMapValue(),
@@ -295,7 +302,12 @@
                 });
 
                 let doughnut = $('#pieChart').get(0).getContext('2d');
-                var myDoughnutChart = new Chart(doughnut, {
+
+                if (this.pieChart) {
+                    this.pieChart.destroy();
+                }
+
+                this.pieChart = new Chart(doughnut, {
                     type: 'doughnut',
                     data: {
                         datasets: [{
@@ -333,10 +345,12 @@
                     }
                     ,
                     options: {
-                        // title: {
-                        //     display: true,
-                        //     text: 'Участники "по общим затратам"'
-                        // },
+                        title: {
+                            fontSize: 20,
+                            position: 'bottom',
+                            display: true,
+                            text: 'Участники "по общим затратам"',
+                        },
                         animation: {
                             easing: "easeOutBounce",
                             duration: 2000
